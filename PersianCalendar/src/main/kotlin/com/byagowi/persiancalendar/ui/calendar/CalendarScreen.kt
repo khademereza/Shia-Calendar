@@ -3,9 +3,11 @@ package com.byagowi.persiancalendar.ui.calendar
 import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -160,6 +162,7 @@ import com.byagowi.persiancalendar.PREF_NOTIFY_IGNORED
 import com.byagowi.persiancalendar.PREF_OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.PREF_OUTDATED_SHOWN
 import com.byagowi.persiancalendar.PREF_SECONDARY_CALENDAR_IN_TABLE
+import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
 import com.byagowi.persiancalendar.PREF_SHOW_WEEK_OF_YEAR_NUMBER
 import com.byagowi.persiancalendar.PREF_SWIPE_DOWN_ACTION
 import com.byagowi.persiancalendar.PREF_SWIPE_UP_ACTION
@@ -1090,8 +1093,8 @@ private fun SharedTransitionScope.CalendarsTab(
             navigateToAstronomy = navigateToAstronomy,
         )
 
-        if (false) {
-            val context = LocalContext.current
+        val context = LocalContext.current
+        if (PREF_SHOW_DEVICE_CALENDAR_EVENTS !in context.preferences) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ActivityCompat.checkSelfPermission(
                     context, Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED && PREF_NOTIFY_IGNORED !in context.preferences && language.isUserAbleToReadPersian && today.isYearSupportedOnApp
@@ -1109,37 +1112,36 @@ private fun SharedTransitionScope.CalendarsTab(
                     },
                 ) { launcher.launch(Manifest.permission.POST_NOTIFICATIONS) }
             }
+        } else if (showEncourageToExemptFromBatteryOptimizations() && isNotifyDate && language.isPersianOrDari) {
+            fun ignore() {
+                val preferences = context.preferences
+                preferences.edit {
+                    val current = preferences.getInt(PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT, 0)
+                    putInt(PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT, current + 1)
+                }
+            }
+
+            fun requestExemption() {
+                runCatching {
+                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                }.onFailure(logException).onFailure { ignore() }.getOrNull().debugAssertNotNull
+            }
+
+            val launcher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission(),
+            ) { requestExemption() }
+
+            EncourageActionLayout(
+                header = "مایلید جهت عملکرد صحیح اعلان تاریخ، برنامه را به فهرست نادیده‌گیری از بهینه‌سازی باتری بیافزایید؟",
+                acceptButton = stringResource(R.string.yes),
+                discardAction = ::ignore,
+            ) {
+                val alarmManager = context.getSystemService<AlarmManager>()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && runCatching { alarmManager?.canScheduleExactAlarms() }.getOrNull().debugAssertNotNull == false) launcher.launch(
+                    Manifest.permission.SCHEDULE_EXACT_ALARM,
+                ) else requestExemption()
+            }
         }
-//        else if (showEncourageToExemptFromBatteryOptimizations()) {
-//            fun ignore() {
-//                val preferences = context.preferences
-//                preferences.edit {
-//                    val current = preferences.getInt(PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT, 0)
-//                    putInt(PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT, current + 1)
-//                }
-//            }
-//
-//            fun requestExemption() {
-//                runCatching {
-//                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-//                }.onFailure(logException).onFailure { ignore() }.getOrNull().debugAssertNotNull
-//            }
-//
-//            val launcher = rememberLauncherForActivityResult(
-//                ActivityResultContracts.RequestPermission(),
-//            ) { requestExemption() }
-//
-//            EncourageActionLayout(
-//                header = stringResource(R.string.exempt_app_battery_optimization),
-//                acceptButton = stringResource(R.string.yes),
-//                discardAction = ::ignore,
-//            ) {
-//                val alarmManager = context.getSystemService<AlarmManager>()
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && runCatching { alarmManager?.canScheduleExactAlarms() }.getOrNull().debugAssertNotNull == false) launcher.launch(
-//                    Manifest.permission.SCHEDULE_EXACT_ALARM,
-//                ) else requestExemption()
-//            }
-//        }
     }
 }
 

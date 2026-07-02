@@ -61,17 +61,26 @@ fun startAthan(context: Context, prayTime: PrayTime, intendedTime: Long?) {
     debugLog("Alarms: startAthan for $prayTime")
     if (intendedTime == null) return startAthanBody(context, prayTime)
     // if alarm is off by 15 minutes, just skip
-    if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) return
+    if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) {
+        debugLog("Alarms: skipped $prayTime for being far")
+        return
+    }
 
     // If at the of being is disabled by user, skip
-    if (prayTime !in getEnabledAlarms(context)) return
+    if (prayTime !in getEnabledAlarms(context)) {
+        debugLog("Alarms: skipped $prayTime for being not enabled")
+        return
+    }
 
     // skips if already called through either WorkManager or AlarmManager
     val preferences = context.preferences
     val lastPlayedAthanKey = preferences.getString(LAST_PLAYED_ATHAN_KEY, null)
     val lastPlayedAthanJdn = preferences.getJdnOrNull(LAST_PLAYED_ATHAN_JDN)
     val today = Jdn.today()
-    if (lastPlayedAthanJdn == today && lastPlayedAthanKey == prayTime.name) return
+    if (lastPlayedAthanJdn == today && lastPlayedAthanKey == prayTime.name) {
+        debugLog("Alarms: skipped $prayTime for played already")
+        return
+    }
     preferences.edit {
         putString(LAST_PLAYED_ATHAN_KEY, prayTime.name)
         putJdn(LAST_PLAYED_ATHAN_JDN, today)

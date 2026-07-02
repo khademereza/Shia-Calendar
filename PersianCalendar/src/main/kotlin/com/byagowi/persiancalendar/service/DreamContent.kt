@@ -3,14 +3,22 @@ package com.byagowi.persiancalendar.service
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,7 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.compose.rememberLifecycleOwner
 import com.byagowi.persiancalendar.global.dreamNoise
-import com.byagowi.persiancalendar.ui.common.PatternCanvas
 import com.byagowi.persiancalendar.ui.common.PatternDrawable
 import com.byagowi.persiancalendar.ui.theme.SystemTheme
 import com.byagowi.persiancalendar.utils.logException
@@ -40,12 +47,21 @@ fun DreamContent(
             dp = with(density) { 1.dp.toPx() },
         )
     }
-    PatternCanvas(
-        patternDrawable,
-        modifier
-            .clickable(indication = null, interactionSource = null, onClick = finish)
-            .onSizeChanged { patternDrawable.setSize(it.width, it.height) },
+    val direction = remember { listOf(1, -1).random() }
+    val infiniteTransition = rememberInfiniteTransition()
+    val animationSpec = infiniteRepeatable<Float>(
+        animation = tween(durationMillis = 360_000, easing = LinearEasing),
     )
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f, animationSpec = animationSpec,
+    )
+    Canvas(
+        modifier = modifier
+            .clickable(indication = null, interactionSource = null, onClick = finish)
+            .onSizeChanged { patternDrawable.setSize(it.width, it.height) }.fillMaxSize()
+    ) {
+        drawIntoCanvas { patternDrawable.draw(it, rotation * direction) }
+    }
     val brownNoise by remember { lazy { brownNoise() } }
     if (dreamNoise) {
         val lifecycleOwner by rememberLifecycleOwner().lifecycle.currentStateAsState()

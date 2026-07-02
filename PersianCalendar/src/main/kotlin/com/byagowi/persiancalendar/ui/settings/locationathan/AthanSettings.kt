@@ -35,17 +35,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.EN_DASH
-import com.byagowi.persiancalendar.PREF_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
 import com.byagowi.persiancalendar.PREF_ATHAN_VIBRATION
 import com.byagowi.persiancalendar.PREF_HIGH_LATITUDES_METHOD
 import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
-import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.PrayTime
-import com.byagowi.persiancalendar.global.ascendingAthan
 import com.byagowi.persiancalendar.global.asrMethod
 import com.byagowi.persiancalendar.global.athanSoundName
 import com.byagowi.persiancalendar.global.athanVibration
@@ -53,7 +50,6 @@ import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.highLatitudesMethod
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.global.updateStoredPreference
 import com.byagowi.persiancalendar.service.invalidateAthanChannel
@@ -65,7 +61,6 @@ import com.byagowi.persiancalendar.ui.settings.SettingsSingleSelect
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
 import com.byagowi.persiancalendar.ui.settings.locationathan.athan.AthanGapDialog
 import com.byagowi.persiancalendar.ui.settings.locationathan.athan.AthanSelectDialog
-import com.byagowi.persiancalendar.ui.settings.locationathan.athan.AthanVolumeDialog
 import com.byagowi.persiancalendar.ui.settings.locationathan.athan.PrayerSelectDialog
 import com.byagowi.persiancalendar.ui.settings.locationathan.athan.PrayerSelectPreviewDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
@@ -150,7 +145,6 @@ fun AthanSettings(
                     onDismissRequest()
                 }
                 result = true
-                context.preferences.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
                 updateStoredPreference(context)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) LaunchedEffect(Unit) {
@@ -189,47 +183,9 @@ fun AthanSettings(
                 }
             }
         }
-        AnimatedVisibility(isLocationSet && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            val launcher = rememberLauncherForActivityResult(
-                ActivityResultContracts.RequestPermission(),
-            ) { isGranted ->
-                context.preferences.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
-                updateStoredPreference(context)
-            }
-            SettingsSwitch(
-                key = PREF_NOTIFICATION_ATHAN,
-                value = notificationAthan,
-                title = stringResource(R.string.notification_athan),
-                summary = stringResource(R.string.enable_notification_athan),
-                onBeforeToggle = { value ->
-                    invalidateAthanChannel(context)
-                    if (value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ActivityCompat.checkSelfPermission(
-                            context, Manifest.permission.POST_NOTIFICATIONS,
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        false
-                    } else value
-                },
-            )
-        }
         AnimatedVisibility(
-            preferencesUpdateToken.let { getEnabledAlarms(context).isNotEmpty() } && isLocationSet && notificationAthan && language.isPersianOrDari,
+            preferencesUpdateToken.let { getEnabledAlarms(context).isNotEmpty() } && isLocationSet && language.isPersianOrDari,
         ) { SettingsHelp(stringResource(R.string.notification_athan_help)) }
-        AnimatedVisibility(isLocationSet && !notificationAthan) {
-            SettingsSwitch(
-                key = PREF_ASCENDING_ATHAN_VOLUME,
-                value = ascendingAthan,
-                title = stringResource(R.string.ascending_athan_volume),
-                summary = stringResource(R.string.enable_ascending_athan_volume),
-            )
-        }
-        AnimatedVisibility(isLocationSet && !notificationAthan && !ascendingAthan) {
-            SettingsClickable(
-                title = stringResource(R.string.athan_volume),
-                summary = stringResource(R.string.athan_volume_summary),
-            ) { onDismissRequest -> AthanVolumeDialog(onDismissRequest = onDismissRequest) }
-        }
         AnimatedVisibility(isLocationSet) {
             SettingsSwitch(
                 key = PREF_ATHAN_VIBRATION,

@@ -9,7 +9,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
 import com.byagowi.persiancalendar.entities.PrayTime
-import com.byagowi.persiancalendar.ui.athan.AthanActivity
 import com.byagowi.persiancalendar.ui.settings.agewidget.WidgetAgeConfigureActivity
 import com.byagowi.persiancalendar.ui.settings.wallpaper.ScreensaverConfigurationActivity
 import com.byagowi.persiancalendar.ui.settings.wallpaper.WallpaperConfigurationActivity
@@ -23,10 +22,6 @@ class ActivitiesSmokeTest {
     fun test() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<MainActivity>(Intent(context, MainActivity::class.java))
-        ActivityScenario.launch<AthanActivity>(
-            Intent(context, AthanActivity::class.java)
-                .putExtra(KEY_EXTRA_PRAYER, PrayTime.ASR.name),
-        )
 //        ActivityScenario.launch<WidgetConfigurationActivity>(
 //            Intent(context, WidgetConfigurationActivity::class.java)
 //        )

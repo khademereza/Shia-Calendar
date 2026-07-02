@@ -16,7 +16,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_AM
-import com.byagowi.persiancalendar.DEFAULT_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.DEFAULT_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VIBRATION
 import com.byagowi.persiancalendar.DEFAULT_AZERI_ALTERNATIVE_PERSIAN_MONTHS
@@ -56,7 +55,6 @@ import com.byagowi.persiancalendar.DEFAULT_WIDGET_TRANSPARENCY
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.PREF_ALTITUDE
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
-import com.byagowi.persiancalendar.PREF_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_ATHAN_NAME
@@ -84,7 +82,6 @@ import com.byagowi.persiancalendar.PREF_LOCAL_NUMERAL
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_MAIN_CALENDAR_KEY
 import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
-import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE_LOCK_SCREEN
 import com.byagowi.persiancalendar.PREF_NUMERICAL_DATE_PREFERRED
@@ -213,12 +210,8 @@ val isWidgetClock by isWidgetClock_
 private val isNotifyDate_ = mutableStateOf(DEFAULT_NOTIFY_DATE)
 val isNotifyDate by isNotifyDate_
 
-private val notificationAthan_ = mutableStateOf(isNotifyDate)
-val notificationAthan by notificationAthan_
 private val athanVibration_ = mutableStateOf(DEFAULT_ATHAN_VIBRATION)
 val athanVibration by athanVibration_
-private val ascendingAthan_ = mutableStateOf(DEFAULT_ASCENDING_ATHAN_VOLUME)
-val ascendingAthan by ascendingAthan_
 
 private val calculationMethod_ = mutableStateOf(CalculationMethod.valueOf(DEFAULT_PRAY_TIME_METHOD))
 val calculationMethod by calculationMethod_
@@ -571,14 +564,7 @@ fun updateStoredPreference(context: Context) {
     )
     isWidgetClock_.value = preferences.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
     isNotifyDate_.value = preferences.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
-    notificationAthan_.value =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || preferences.getBoolean(
-            PREF_NOTIFICATION_ATHAN,
-            isNotifyDate,
-        )
     athanVibration_.value = preferences.getBoolean(PREF_ATHAN_VIBRATION, DEFAULT_ATHAN_VIBRATION)
-    ascendingAthan_.value =
-        preferences.getBoolean(PREF_ASCENDING_ATHAN_VOLUME, DEFAULT_ASCENDING_ATHAN_VOLUME)
     isCenterAlignWidgets_.value =
         preferences.getBoolean(PREF_CENTER_ALIGN_WIDGETS, DEFAULT_CENTER_ALIGN_WIDGETS)
 

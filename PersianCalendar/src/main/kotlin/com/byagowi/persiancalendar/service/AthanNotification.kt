@@ -8,14 +8,11 @@ import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
-import androidx.core.os.postDelayed
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_CHANNEL_ID
 import com.byagowi.persiancalendar.PREF_ATHAN_CHANNEL_ID
 import com.byagowi.persiancalendar.PREF_ATHAN_GAP
@@ -27,29 +24,29 @@ import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.getAthanUri
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.setDirection
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.minutes
 
 fun startAthanNotification(context: Context, prayTime: PrayTime) {
+    debugLog("Alarms: startAthanNotification for $prayTime")
     applyAppLanguage(context)
 
     val notificationId = currentChannelId(context)
     val notificationChannelId = "$notificationId"
 
-    val notificationManager = context.getSystemService<NotificationManager>()
+    val notificationManager = context.getSystemService<NotificationManager>() ?: return
 
-    val soundUri = if (notificationAthan) getAthanUri(context) else null
-    if (soundUri != null) runCatching {
+    val soundUri = getAthanUri(context)
+    runCatching {
         // ensure custom reminder sounds play well
         context.grantUriPermission(
             "com.android.systemui", soundUri, Intent.FLAG_GRANT_READ_URI_PERMISSION,
@@ -59,8 +56,7 @@ fun startAthanNotification(context: Context, prayTime: PrayTime) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val notificationChannel = NotificationChannel(
             notificationChannelId, context.getString(R.string.athan),
-            if (notificationAthan) NotificationManager.IMPORTANCE_HIGH
-            else NotificationManager.IMPORTANCE_DEFAULT,
+            NotificationManager.IMPORTANCE_HIGH,
         ).also {
             it.description = context.getString(R.string.athan)
             it.enableLights(true)
@@ -68,7 +64,7 @@ fun startAthanNotification(context: Context, prayTime: PrayTime) {
             if (athanVibration) it.vibrationPattern = LongArray(2) { 500 }
             it.enableVibration(athanVibration)
             it.setBypassDnd(prayTime.isBypassDnd)
-            if (soundUri == null) it.setSound(null, null) else it.setSound(
+            it.setSound(
                 soundUri,
                 AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
@@ -76,7 +72,7 @@ fun startAthanNotification(context: Context, prayTime: PrayTime) {
                     .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED).build(),
             )
         }
-        notificationManager?.createNotificationChannel(notificationChannel)
+        notificationManager.createNotificationChannel(notificationChannel)
     }
 
     val prayTimeName = context.getString(prayTime.stringRes).let {
@@ -114,13 +110,9 @@ fun startAthanNotification(context: Context, prayTime: PrayTime) {
 //            ),
 //        )
 
-    if (notificationAthan) {
-        notificationBuilder.priority = NotificationCompat.PRIORITY_MAX
-        notificationBuilder.setSound(soundUri, AudioManager.STREAM_NOTIFICATION)
-        notificationBuilder.setCategory(NotificationCompat.CATEGORY_ALARM)
-    } else {
-        notificationBuilder.setSound(null)
-    }
+    notificationBuilder.priority = NotificationCompat.PRIORITY_MAX
+    notificationBuilder.setSound(soundUri, AudioManager.STREAM_NOTIFICATION)
+    notificationBuilder.setCategory(NotificationCompat.CATEGORY_ALARM)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         val cv = RemoteViews(context.packageName, R.layout.custom_notification)
@@ -136,11 +128,11 @@ fun startAthanNotification(context: Context, prayTime: PrayTime) {
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
     }
 
-    notificationManager?.notify(notificationId, notificationBuilder.build())
+    notificationManager.notify(notificationId, notificationBuilder.build())
 
-    Handler(Looper.getMainLooper()).postDelayed(6.minutes.inWholeMilliseconds) {
-        notificationManager?.cancel(notificationId)
-    }
+//    Handler(Looper.getMainLooper()).postDelayed(6.minutes.inWholeMilliseconds) {
+//        notificationManager?.cancel(notificationId)
+//    }
 }
 
 fun invalidateAthanChannel(context: Context) {

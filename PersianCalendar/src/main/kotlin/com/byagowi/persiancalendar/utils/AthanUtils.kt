@@ -1,17 +1,14 @@
 package com.byagowi.persiancalendar.utils
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
 import androidx.annotation.RawRes
-import androidx.core.app.ActivityCompat
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
@@ -35,11 +32,9 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.service.startAthanNotification
-import com.byagowi.persiancalendar.ui.athan.AthanActivity
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -90,21 +85,7 @@ fun startAthan(context: Context, prayTime: PrayTime, intendedTime: Long?) {
 }
 
 private fun startAthanBody(context: Context, prayTime: PrayTime) {
-    runCatching {
-        debugLog("Alarms: startAthanBody for $prayTime")
-        if (notificationAthan || ActivityCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS,
-            ) == PackageManager.PERMISSION_GRANTED
-        ) startAthanNotification(context, prayTime) else startAthanActivity(context, prayTime)
-    }.onFailure(logException)
-}
-
-fun startAthanActivity(context: Context, prayTime: PrayTime?) {
-    context.startActivity(
-        Intent(context, AthanActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .putExtra(KEY_EXTRA_PRAYER, prayTime?.name),
-    )
+    runCatching { startAthanNotification(context, prayTime) }.onFailure(logException)
 }
 
 fun getEnabledAlarms(context: Context): Set<PrayTime> {

@@ -154,18 +154,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.athan.AthanActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:showForAllUsers="true"
-            android:showOnLockScreen="true"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            tools:ignore="UnusedAttribute" />
-
         <receiver
             android:name=".service.BroadcastReceivers"
             android:exported="false">

@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.getSystemService
+import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
@@ -401,12 +402,20 @@ private fun createItemsList(
     insets: String,
     runtime: Runtime,
 ) = listOf(
-    Item("CPU Instructions Sets", Build.SUPPORTED_ABIS.joinToString(", ")),
     Item(
-        "Kernel architecture",
-        runCatching {
-            runtime.exec("uname -m").inputStream.bufferedReader().readText().trim()
-        }.getOrNull().debugAssertNotNull,
+        "CPU Instructions Sets",
+        buildString {
+            append(Build.SUPPORTED_ABIS.joinToString(", "))
+            if (BuildConfig.DEVELOPMENT) runCatching {
+                appendLine()
+                append("Kernel architecture: ")
+                append(
+                    runtime.exec(
+                        arrayOf("uname", "-m"),
+                    ).inputStream.bufferedReader().readText().trim(),
+                )
+            }.getOrNull().debugAssertNotNull
+        },
     ),
     Item(
         "Android Version",
